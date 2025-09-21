@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AV Media — Hodnocení servisu</title>
+  <style>
+    :root { font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; }
+    body { margin:0; background:#f7f7f9; display:flex; align-items:center; justify-content:center; min-height:100vh; padding:24px; }
+    .card { width:100%; max-width:760px; background:#fff; border-radius:10px; box-shadow:0 6px 20px rgba(0,0,0,0.08); padding:28px; }
+    header { display:flex; gap:16px; align-items:center; border-bottom:3px solid #d32222; padding-bottom:14px; margin-bottom:18px; }
+    header img { height:40px; }
+    h1 { font-size:20px; margin:0; color:#d32222; }
+    p.lead { margin:4px 0 0; color:#444; }
+    form { display:flex; flex-direction:column; gap:14px; }
+    label { font-size:14px; font-weight:500; margin-bottom:4px; }
+    input[type="text"], textarea, select { width:100%; padding:10px 12px; border:1px solid #ddd; border-radius:6px; font-size:14px; background:#fff; }
+    .satisfaction { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+    .satisfaction input { transform:scale(1.1); }
+    button { background:#d32222; color:#fff; border:0; padding:10px 14px; border-radius:6px; font-weight:600; cursor:pointer; font-size:14px; }
+    button.secondary { background:#f0f0f0; color:#111; }
+    .msg { margin-top:8px; padding:12px; border-radius:6px; }
+    .ok { background:#f0fff4; border:1px solid #c6f1c6; color:#125a21; }
+    .err { background:#fff4f4; border:1px solid #f5d3d3; color:#7a1a1a; }
+    .lang { margin-left:auto; }
+    .lang button { background:#f0f0f0; color:#111; font-size:12px; padding:6px 10px; margin-left:6px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <header>
+      <img src="https://www.avmedia.cz/themes/custom/avmedia/logo.svg" alt="AV Media Logo">
+      <div style="flex:1">
+        <h1 id="title">Hodnocení servisu — AV Media</h1>
+        <p class="lead" id="lead">Děkujeme, že si najdete chvíli — vaše hodnocení pomůže zlepšit naše služby.</p>
+      </div>
+      <div class="lang">
+        <button type="button" onclick="setLang('cs')">CZ</button>
+        <button type="button" onclick="setLang('en')">EN</button>
+      </div>
+    </header>
+
+    <form id="reviewForm">
+      <div>
+        <label id="lblCompany" for="company">Firma (volitelné)</label>
+        <input id="company" name="company" type="text" placeholder="Název firmy / organizace">
+        <div style="margin-top:6px;">
+          <input id="anonymous" type="checkbox"> <label for="anonymous" id="lblAnon">Chci zůstat anonymní</label>
+        </div>
+      </div>
+
+      <div>
+        <label id="lblSatisfaction">Jak jste byl(a) spokojen(a) se servisem?</label>
+        <div class="satisfaction">
+          <label><input type="radio" name="satisfaction" value="1" required> 1</label>
+          <label><input type="radio" name="satisfaction" value="2"> 2</label>
+          <label><input type="radio" name="satisfaction" value="3"> 3</label>
+          <label><input type="radio" name="satisfaction" value="4"> 4</label>
+          <label><input type="radio" name="satisfaction" value="5"> 5</label>
+        </div>
+      </div>
+
+      <div>
+        <label id="lblRecommend" for="recommend">Doporučil(a) byste nás dál?</label>
+        <select id="recommend" name="recommend" required>
+          <option value="" disabled selected>Vyberte...</option>
+          <option value="ano">Ano</option>
+          <option value="ne">Ne</option>
+          <option value="možná">Možná</option>
+        </select>
+      </div>
+
+      <div>
+        <label id="lblNotes" for="notes">Osobní poznámka (volitelné)</label>
+        <textarea id="notes" name="notes" rows="4"></textarea>
+      </div>
+
+      <button type="submit" id="btnSubmit">Odeslat hodnocení</button>
+      <div id="result"></div>
+    </form>
+  </div>
+
+  <script>
+    const webhook = "https://script.google.com/macros/s/AKfycbxrWyHlP_EkFSdzxlj16ag0XrvjJsBPnXT_tl_3bykMN7oJfDng424nhRJsolZQRkhCMQ/exec";
+
+    const texts = {
+      cs: {
+        title: "Hodnocení servisu — AV Media",
+        lead: "Děkujeme, že si najdete chvíli — vaše hodnocení pomůže zlepšit naše služby.",
+        lblCompany: "Firma (volitelné)",
+        lblAnon: "Chci zůstat anonymní",
+        lblSatisfaction: "Jak jste byl(a) spokojen(a) se servisem?",
+        lblRecommend: "Doporučil(a) byste nás dál?",
+        lblNotes: "Osobní poznámka (volitelné)",
+        btnSubmit: "Odeslat hodnocení",
+        optSelect: "Vyberte...",
+        optYes: "Ano",
+        optNo: "Ne",
+        optMaybe: "Možná",
+        success: "Děkujeme — hodnocení bylo odesláno.",
+        error: "Omlouváme se, odeslání se nezdařilo."
+      },
+      en: {
+        title: "Service Feedback — AV Media",
+        lead: "Thank you for taking a moment — your feedback helps us improve our services.",
+        lblCompany: "Company (optional)",
+        lblAnon: "I want to stay anonymous",
+        lblSatisfaction: "How satisfied were you with the service?",
+        lblRecommend: "Would you recommend us further?",
+        lblNotes: "Personal note (optional)",
+        btnSubmit: "Submit feedback",
+        optSelect: "Select...",
+        optYes: "Yes",
+        optNo: "No",
+        optMaybe: "Maybe",
+        success: "Thank you — your feedback has been submitted.",
+        error: "Sorry, submission failed."
+      }
+    };
+
+    function setLang(lang) {
+      const t = texts[lang];
+      document.getElementById("title").textContent = t.title;
+      document.getElementById("lead").textContent = t.lead;
+      document.getElementById("lblCompany").textContent = t.lblCompany;
+      document.getElementById("lblAnon").textContent = t.lblAnon;
+      document.getElementById("lblSatisfaction").textContent = t.lblSatisfaction;
+      document.getElementById("lblRecommend").textContent = t.lblRecommend;
+      document.getElementById("lblNotes").textContent = t.lblNotes;
+      document.getElementById("btnSubmit").textContent = t.btnSubmit;
+      const recommend = document.getElementById("recommend");
+      recommend.options[0].text = t.optSelect;
+      recommend.options[1].text = t.optYes;
+      recommend.options[2].text = t.optNo;
+      recommend.options[3].text = t.optMaybe;
+      recommend.selectedIndex = 0;
+      document.documentElement.lang = lang;
+    }
+
+    document.getElementById("reviewForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const result = document.getElementById("result");
+      result.textContent = "";
+
+      const lang = document.documentElement.lang || "cs";
+      const data = {
+        anonymous: document.getElementById("anonymous").checked,
+        company: document.getElementById("anonymous").checked ? "" : document.getElementById("company").value,
+        satisfaction: document.querySelector("input[name='satisfaction']:checked")?.value || "",
+        recommend: document.getElementById("recommend").value,
+        notes: document.getElementById("notes").value,
+        lang
+      };
+
+      try {
+        // To avoid CORS preflight, use text/plain instead of application/json
+        const res = await fetch(webhook, {
+          method:"POST",
+          headers: { "Content-Type":"text/plain;charset=utf-8" },
+          body: JSON.stringify(data)
+        });
+        // We may not be able to read body on some setups, so just show generic OK on 200
+        if (res.ok) {
+          result.innerHTML = '<div class="msg ok">' + (lang==='cs' ? texts.cs.success : texts.en.success) + '</div>';
+          e.target.reset();
+        } else {
+          const txt = await res.text();
+          result.innerHTML = '<div class="msg err">Error ' + res.status + ': ' + txt + '</div>';
+        }
+      } catch (err) {
+        result.innerHTML = '<div class="msg err">' + (lang==='cs' ? texts.cs.error : texts.en.error) + '<br><small>' + err + '</small></div>';
+      }
+    });
+
+    // default Czech
+    setLang('cs');
+  </script>
+</body>
+</html>
